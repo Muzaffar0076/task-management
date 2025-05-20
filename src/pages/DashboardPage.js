@@ -7,9 +7,16 @@ const DashboardPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    description: '',
+    priority: 'Medium',
+    dueDate: '',
+  });
   
   // Sample projects data
-  const [projects] = useState([
+  const [projects, setProjects] = useState([
     {
       id: 1,
       name: 'Website Redesign',
@@ -82,6 +89,39 @@ const DashboardPage = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleNewProject = () => {
+    const project = {
+      id: projects.length + 1,
+      name: newProject.name,
+      description: newProject.description,
+      progress: 0,
+      tasks: { total: 0, completed: 0 },
+      priority: newProject.priority,
+      dueDate: newProject.dueDate
+    };
+    
+    const updatedProjects = [...projects, project];
+    setProjects(updatedProjects);
+    // Store projects in localStorage
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
+    
+    setNewProject({
+      name: '',
+      description: '',
+      priority: 'Medium',
+      dueDate: '',
+    });
+    setIsNewProjectModalOpen(false);
+  };
+
+  // Load projects from localStorage on component mount
+  useEffect(() => {
+    const savedProjects = localStorage.getItem('projects');
+    if (savedProjects) {
+      setProjects(JSON.parse(savedProjects));
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -311,7 +351,10 @@ const DashboardPage = () => {
               <div className="mt-8">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg leading-6 font-medium text-gray-900">Projects</h2>
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                  <button 
+                    onClick={() => setIsNewProjectModalOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  >
                     <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -385,7 +428,10 @@ const DashboardPage = () => {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="bg-gray-50 overflow-hidden shadow-sm rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors duration-300"
                   >
-                    <button className="w-full h-full px-4 py-5 sm:p-6 flex flex-col items-center justify-center">
+                    <button 
+                      onClick={() => setIsNewProjectModalOpen(true)}
+                      className="w-full h-full px-4 py-5 sm:p-6 flex flex-col items-center justify-center"
+                    >
                       <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                       </svg>
@@ -435,6 +481,80 @@ const DashboardPage = () => {
           </div>
         </main>
       </div>
+
+      {/* New Project Modal */}
+      {isNewProjectModalOpen && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Create New Project</h3>
+            </div>
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="project-name" className="block text-sm font-medium text-gray-700">Project Name</label>
+                  <input
+                    type="text"
+                    id="project-name"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="project-description" className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    id="project-description"
+                    rows="3"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="project-priority" className="block text-sm font-medium text-gray-700">Priority</label>
+                  <select
+                    id="project-priority"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={newProject.priority}
+                    onChange={(e) => setNewProject({...newProject, priority: e.target.value})}
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="project-due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
+                  <input
+                    type="date"
+                    id="project-due-date"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={newProject.dueDate}
+                    onChange={(e) => setNewProject({...newProject, dueDate: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                type="button"
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={() => setIsNewProjectModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={handleNewProject}
+              >
+                Create Project
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
